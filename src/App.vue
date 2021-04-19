@@ -1,131 +1,142 @@
 <template>
-    <v-layout row wrap>
-        <v-flex xs3>
+  <v-app>
+    <v-container>
+      <v-layout row wrap>
+        <v-flex xs12 md6>
+          <div class="give-space-field-right">
             <v-text-field
-                    append-icon="Busqueda"
-                    label="Filtro"
-                    center-line
-                    hide-details
-                    @input="filterSearch"
+              label="Filtro"
+              center-line
+              hide-details
             ></v-text-field>
+          </div>
         </v-flex>
-        
-        <v-flex xs3>
+
+        <v-flex xs12 md6>
+          <div class="give-space-field-left">
             <v-select
-                    :items="authors"
-                    label="Author"
-                    @change="filterAuthor"
+              v-model="cfdiFilterChoosed"
+              :items="cfditype"
+              label="Escoge un filtro"
+              @change="onFilterSelected"
             ></v-select>
+          </div>
         </v-flex>
-        
+
         <v-flex xs12>
-            <v-data-table
-                    :headers="headers"
-                    :items="cfdireport"                    
-                    :item-key="cfdi_type"
-                    :search="filters"
-                    :items-per-page="5"
-                    :custom-filter="customFilter"
-            >
-                <template slot="headers" slot-scope="props">
-                    <tr>
-                        <th v-for="header in props.headers" :key="header.text">
-                            {{ header.text }}
-                        </th>
-                    </tr>
-                </template>
-                <template slot="items" slot-scope="props">
-                    <tr>
-                        <td>{{ props.item.name }}</td>
-                        <td>{{ props.item.added_by }}</td>
-                    </tr>
-                </template>
-            </v-data-table>
+          <v-data-table
+            :headers="headers"
+            :items="cfdireport"
+            :options.sync="pagination"
+            :server-items-length="totalElements"
+          >
+          </v-data-table>
         </v-flex>
-    </v-layout>
+      </v-layout>
+    </v-container>
+  </v-app>
 </template>
+
+<style lang="scss">
+.give-space-field-right {
+  margin-right: 20px;
+  @media (max-width: 960px) {
+    margin: 0px 10px 0px 10px;
+  }
+}
+.give-space-field-left {
+  margin-left: 20px;
+  @media (max-width: 960px) {
+    margin: 0px 10px 0px 10px;
+  }
+}
+</style>
 
 
 <script>
-
-import cfdiservices from '@/services/cfdi'
+import cfdiservices from "@/services/cfdi";
+// import cfdiFixtures from "@/fixtures/cfdiFixtures";
 
 export default {
-  name: 'App',
+  name: "App",
 
-  components: {
-    
-  },
+  components: {},
 
-  data: () =>({
+  data: () => ({
     filter: {
-      search: '',
-      added_by: '',
-
+      search: "",
+      added_by: "",
     },
-    cfditype: ['Admin', 'Editor'],
+    pagination:{},
+    cfdiFilterChoosed: "",
+    cfditype: ["Ingresos", "Egresos"],
     headers: [
-          {
-            text: 'Status',
-            align: 'start',
-            sortable: true,
-            value: 'status',
-          },
-          { text: 'Fecha de Cancelación', value: 'cancellation_datetime' },
-          { text: 'Versión', value: 'version' },
-          { text: 'Tipo de CFDI', value: 'cfdi_type' },
-          { text: 'Series', value: 'series' },
-          { text: 'Folio', align: 'center', value: 'folio' },
-          { text: 'CFDI', align: 'rigth', value: 'uuid' },
-          { text: 'Emisión', value: 'cfdi_date_time_t' },
-          { text: 'Receptor', value: 'receiver_rfc' },
-          { text: 'Descripción del Receptor', value: 'receiver_name' },
-          { text: 'Emisor', value: 'issuer_rfc' },
-          { text: 'Descripción Emisor', value: 'issuer_name' },
-          { text: 'Descripcion', value: 'descripcion' },
-          { text: 'Metodo de Pago', value: 'payment_method' },
-          { text: 'Forma de Pago', value: 'payment_mode' },
-          { text: 'SubTotal', value: 'subtotal' },
-          { text: 'Descuento', value: 'discount_total_amount' },
-          { text: 'Impuestos', value: 'taxes' },
-          { text: 'IVA Retenido', value: 'iva_retenido' },
-          { text: 'Total', value: 'total' },
-        ], 
-        cfdireport: []
+      {
+        text: "Status",
+        align: "start",
+        sortable: true,
+        value: "status",
+      },
+      { text: "Compañia", value: "company" },
+      { text: "Fecha de Cancelación", value: "cancellation_datetime" },
+      { text: "Versión", value: "version" },
+      { text: "Tipo de CFDI", value: "cfdi_type" },
+      { text: "Series", value: "series" },
+      { text: "Folio", align: "center", value: "folio" },
+      { text: "ejercicio", align: "center", value: "year" },
+      { text: "CFDI", align: "rigth", value: "uuid" },
+      { text: "Emisión", value: "cfdi_date_time_t" },
+      { text: "Receptor", value: "receiver_rfc" },
+      { text: "Descripción del Receptor", value: "receiver_name" },
+      { text: "Emisor", value: "issuer_rfc" },
+      { text: "Descripción Emisor", value: "issuer_name" },
+      { text: "Descripcion", value: "descripcion" },
+      { text: "Metodo de Pago", value: "payment_method" },
+      { text: "Forma de Pago", value: "payment_mode" },
+      { text: "SubTotal", value: "subtotal" },
+      { text: "Descuento", value: "discount_total_amount" },
+      { text: "Impuestos", value: "taxes" },
+      { text: "IVA Retenido", value: "iva_retenido" },
+      { text: "Total", value: "total" },
+    ],
+    cfdireport: [],
+    totalElements: 0
   }),
-  created () {
-    this.getcfidireport()
+  created() {
+    console.log(this.pagination)
+    this.getcfidireport();    
   },
   methods: {
-    async getcfidireport () {
-      this.cfdireport = await cfdiservices.getcfdireporissues()
+    async getcfidireport() {
+      const companygroup ='Inmobiliaria'
+      const company ='INC'
+      let cfditype
+      const year = 2021
+      let page = this.pagination.page ? this.pagination.page - 1 : 0
+      let size = this.pagination.itemsPerPage ? this.pagination.itemsPerPage : 10
+      if(this.cfdiFilterChoosed === null){
+          cfditype = this.cfditype[0]
+        }else{
+          cfditype = this.cfdiFilterChoosed
+        }
+      
+      let res = await cfdiservices.getcfdireporissues(companygroup, company, cfditype, year, size, page);
+      this.cfdireport = res.content
+      res.totalElements = this.cfdireport.totalElements
     },
-    customFilter(items, filters, filter, headers) {
-        const cf = new this.$MultiFilters(items, filters, filter, headers);
-        cf.registerFilter('search', function (searchWord, items) {
-          if (searchWord.trim() === '') return items;
-
-          return items.filter(item => {
-            return item.name.toLowerCase().includes(searchWord.toLowerCase());
-          }, searchWord);
-
-        });
-        cf.registerFilter('added_by', function (added_by, items) {
-          if (added_by.trim() === '') return items;
-
-          return items.filter(item => {
-            return item.added_by.toLowerCase() === added_by.toLowerCase();
-          }, added_by);
-
-        });
-        return cf.runFilters();
-      },
-      filterSearch(val) {
-        this.filters = this.$MultiFilters.updateFilters(this.filters, {search: val});
-      },
-      filterAuthor(val) {
-        this.filters = this.$MultiFilters.updateFilters(this.filters, {added_by: val});
-      },
+  
+//companygroup, company, cfditype, year, pageSize, pageNo
+    onFilterSelected() {
+      this.getcfidireport();
   }
-};
+  },
+  watch:{ 
+   pagination: {
+      handler: function () {
+        this.getcfidireport()
+      },
+      deep: true,
+    },
+  }
+}
 </script>
