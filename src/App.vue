@@ -52,9 +52,8 @@
 }
 </style>
 
-
 <script>
-import cfdiservices from "@/services/cfdi";
+import cfdiservices from "@/services/cfdi"
 // import cfdiFixtures from "@/fixtures/cfdiFixtures";
 
 export default {
@@ -65,17 +64,17 @@ export default {
   data: () => ({
     filter: {
       search: "",
-      added_by: "",
+      added_by: ""
     },
-    pagination:{},
-    cfdiFilterChoosed: "",
+    pagination: {},
+    cfdiFilterChoosed: null,
     cfditype: ["Ingresos", "Egresos"],
     headers: [
       {
         text: "Status",
         align: "start",
         sortable: true,
-        value: "status",
+        value: "status"
       },
       { text: "Compañia", value: "company" },
       { text: "Fecha de Cancelación", value: "cancellation_datetime" },
@@ -97,46 +96,57 @@ export default {
       { text: "Descuento", value: "discount_total_amount" },
       { text: "Impuestos", value: "taxes" },
       { text: "IVA Retenido", value: "iva_retenido" },
-      { text: "Total", value: "total" },
+      { text: "Total", value: "total" }
     ],
     cfdireport: [],
     totalElements: 0
   }),
   created() {
+    this.getcfidireport()
+  },
+  mounted() {
     console.log(this.pagination)
-    this.getcfidireport();    
   },
   methods: {
     async getcfidireport() {
-      const companygroup ='Inmobiliaria'
-      const company ='INC'
+      const companygroup = "Inmobiliaria"
+      const company = "INC"
       let cfditype
       const year = 2021
       let page = this.pagination.page ? this.pagination.page - 1 : 0
-      let size = this.pagination.itemsPerPage ? this.pagination.itemsPerPage : 10
-      if(this.cfdiFilterChoosed === null){
-          cfditype = this.cfditype[0]
-        }else{
-          cfditype = this.cfdiFilterChoosed
-        }
-      
-      let res = await cfdiservices.getcfdireporissues(companygroup, company, cfditype, year, size, page);
+      let size = this.pagination.itemsPerPage
+        ? this.pagination.itemsPerPage
+        : 10
+      if (this.cfdiFilterChoosed == null) {
+        cfditype = this.cfditype[0]
+      } else {
+        cfditype = this.cfdiFilterChoosed
+      }
+
+      let res = await cfdiservices.getcfdireporissues(
+        companygroup,
+        company,
+        cfditype,
+        year,
+        size,
+        page
+      )
       this.cfdireport = res.content
       res.totalElements = this.cfdireport.totalElements
     },
-  
-//companygroup, company, cfditype, year, pageSize, pageNo
+
+    //companygroup, company, cfditype, year, pageSize, pageNo
     onFilterSelected() {
-      this.getcfidireport();
-  }
+      this.getcfidireport()
+    }
   },
-  watch:{ 
-   pagination: {
-      handler: function () {
+  watch: {
+    pagination: {
+      handler: function() {
         this.getcfidireport()
       },
-      deep: true,
-    },
+      deep: true
+    }
   }
 }
 </script>
